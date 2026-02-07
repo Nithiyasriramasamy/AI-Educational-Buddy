@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Mentor Chat - Anti-Gravity</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            background-color: #f0f2f5;
+        }
+
+        .chat-container {
+            max_width: 700px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            height: 80vh;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            line-height: 1.5;
+            position: relative;
+            font-size: 1rem;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .message.ai {
+            align-self: flex-start;
+            background: #f0f0f0;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: #2196f3;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .options-area {
+            padding: 20px;
+            background: #fff;
+            border-top: 1px solid #eee;
+            min-height: 80px;
+        }
+
+        .options-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .chat-option-btn {
+            background: transparent;
+            border: 1px solid #2196f3;
+            color: #2196f3;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .chat-option-btn:hover {
+            background: #e3f2fd;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+            background: #f0f0f0;
+            border-radius: 18px;
+            align-self: flex-start;
+            margin-bottom: 10px;
+            width: fit-content;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #bbb;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0);
+            }
+
+            40% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <a href="/" class="logo">🎓 AI Teacher</a>
+            <nav>
+                <a href="/" class="btn btn-secondary">Exit Chat</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div
+                    style="width: 40px; height: 40px; background: #e3f2fd; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    🤖</div>
+                <div>
+                    <strong>Physics Mentor</strong><br>
+                    <span style="font-size: 0.8em; color: green;">● Online</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chat-messages">
+            <!-- Messages will appear here -->
+        </div>
+
+        <div class="options-area" id="options-area">
+            <div class="options-container" id="options-container">
+                <button class="btn" onclick="startChat()">Start Chatting</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                q: "When you hear 'Anti-Gravity', what’s the first feeling that pops into your head? 🤔",
+                options: [
+                    "That sounds super cool! Like magic. ✨",
+                    "Hmm, interesting. How would that work? 🧐",
+                    "Sounds a bit confusing to be honest. 😕",
+                    "Not really sure, maybe a bit scary? 😬"
+                ],
+                trait: "interest"
+            },
+            {
+                q: "If someone said they built a floating skateboard, would you believe them? 🛹",
+                options: [
+                    "I'd want to see it instantly! 👀",
+                    "Maybe, but I'd ask how it stays up. 🛠️",
+                    "I'd assume it's a trick or fake. 🚫",
+                    "I wouldn't really care unless I can ride it. 🤷‍♂️"
+                ],
+                trait: "skepticism"
+            },
+            {
+                q: "Do you prefer when things are explained with... 📚",
+                options: [
+                    "Fun stories and examples.",
+                    "Clear, simple facts.",
+                    "Deep reasons and 'why' it works.",
+                    "Just show me a video, please."
+                ],
+                trait: "learning_style"
+            },
+            {
+                q: "If I said 'gravity bends space', does that make sense to you? 🌌",
+                options: [
+                    "Whoa, sounds deep. Tell me more!",
+                    "Kind of? Like a heavy ball on a trampoline?",
+                    "Not really, sounds too complicated.",
+                    "I think I've heard that before."
+                ],
+                trait: "comfort"
+            },
+            {
+                q: "Last one! If you could float for 10 minutes, where would you go? 🎈",
+                options: [
+                    "Straight up to see the view!",
+                    "Just hover around my room first.",
+                    "I'd try to lift something heavy.",
+                    "I'd be too scared to let go of the ground."
+                ],
+                trait: "personality"
+            }
+        ];
+
+        let currentQIndex = 0;
+        let answers = [];
+        const chatBox = document.getElementById('chat-messages');
+        const optionsBox = document.getElementById('options-container');
+
+        function startChat() {
+            optionsBox.innerHTML = '';
+            addMessage("Let’s talk about a fun idea for a minute 🙂 There’s no test here.", 'ai');
+            setTimeout(() => {
+                askNextQuestion();
+            }, 1000);
+        }
+
+        async function addMessage(text, sender) {
+            // If AI, show typing indicator first
+            if (sender === 'ai') {
+                const typingId = 'typing-' + Date.now();
+                const typingHTML = `
+                    <div class="typing-indicator" id="${typingId}">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                `;
+                chatBox.insertAdjacentHTML('beforeend', typingHTML);
+                chatBox.scrollTop = chatBox.scrollHeight;
+
+                await new Promise(r => setTimeout(r, 800 + Math.random() * 500)); // Simul typing delay
+
+                document.getElementById(typingId).remove();
+            }
+
+            const div = document.createElement('div');
+            div.className = `message ${sender}`;
+            div.innerHTML = text; // allow HTML
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function askNextQuestion() {
+            if (currentQIndex < questions.length) {
+                const q = questions[currentQIndex];
+                await addMessage(q.q, 'ai');
+                showOptions(q.options);
+            } else {
+                finishChat();
+            }
+        }
+
+        function showOptions(options) {
+            optionsBox.innerHTML = '';
+            options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'chat-option-btn';
+                btn.textContent = opt;
+                btn.onclick = () => selectOption(opt, index);
+                optionsBox.appendChild(btn);
+            });
+        }
+
+        function selectOption(text, index) {
+            // Remove options
+            optionsBox.innerHTML = '';
+
+            // Add user message
+            addMessage(text, 'user');
+
+            // Store answer
+            answers.push({
+                question: questions[currentQIndex].q,
+                answer: text,
+                trait: questions[currentQIndex].trait
+            });
+
+            currentQIndex++;
+            setTimeout(askNextQuestion, 500);
+        }
+
+        async function finishChat() {
+            await addMessage("Thanks! Let me think about what you said... 🤔", 'ai');
+
+            try {
+                const response = await fetch('/api/analyze-quiz', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ answers })
+                });
+                const data = await response.json();
+
+                await addMessage(data.explanation, 'ai');
+                await addMessage(`<strong>Thinking Question:</strong> ${data.question}`, 'ai');
+
+                // Show final actions
+                optionsBox.innerHTML = `
+                    <a href="/generator" class="btn">Create Video</a>
+                    <button class="btn btn-secondary" onclick="location.reload()">Restart</button>
+                `;
+
+            } catch (e) {
+                addMessage("Oops, I lost my train of thought. Can we try again?", 'ai');
+            }
+        }
+    </script>
+</body>
+
+</html>

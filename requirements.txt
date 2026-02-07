@@ -1,0 +1,15 @@
+flask
+groq
+python-dotenv
+diffusers
+transformers
+accelerate
+torch
+pyttsx3
+moviepy<2.0
+Pillow
+numpy
+scipy
+google-generativeai
+opencv-python
+flask-socketio

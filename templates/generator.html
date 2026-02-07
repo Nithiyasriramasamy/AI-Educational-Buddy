@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator - AI Teaching Video</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <a href="/" class="logo">🎓 AI Teacher</a>
+            <nav>
+                <a href="/" class="btn btn-secondary">Home</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <div class="steps">
+            <div class="step active" id="step1-ind">1. Script</div>
+            <div class="step" id="step2-ind">2. Scenes</div>
+            <div class="step" id="step3-ind">3. Images</div>
+            <div class="step" id="step4-ind">4. Audio</div>
+            <div class="step" id="step5-ind">5. Video</div>
+        </div>
+
+        <div id="status-bar" class="status-bar">
+            Ready to start.
+        </div>
+
+        <!-- SECTION 1: SCRIPT -->
+        <div class="card" id="section-script">
+            <h2>1. Prepare Script</h2>
+            <div class="form-group">
+                <label>Student Profile (Customize Learning)</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <select id="knowledge_level" class="form-control">
+                        <option value="beginner">Knowledge: Beginner (Start from zero)</option>
+                        <option value="average" selected>Knowledge: Average (High School)</option>
+                        <option value="advanced">Knowledge: Advanced (College)</option>
+                    </select>
+                    <select id="english_level" class="form-control">
+                        <option value="very simple">English: Very Simple</option>
+                        <option value="normal" selected>English: Normal</option>
+                    </select>
+                    <select id="examples_needed" class="form-control">
+                        <option value="yes" selected>Use Real-life Examples: Yes</option>
+                        <option value="no">Use Real-life Examples: No</option>
+                    </select>
+                    <select id="confidence_level" class="form-control">
+                        <option value="low">Confidence: Low (Encouraging)</option>
+                        <option value="medium" selected>Confidence: Medium</option>
+                        <option value="high">Confidence: High (Direct)</option>
+                    </select>
+                </div>
+
+                <label for="topic">Topic</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="topic" placeholder="e.g. The Water Cycle">
+                    <button class="btn btn-secondary" onclick="generateScript()">Generate Personalized Script</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="script-content">Teaching Script</label>
+                <textarea id="script-content" rows="10"
+                    placeholder="Paste your script here or generate one above..."></textarea>
+            </div>
+
+            <div style="text-align: right;">
+                <button class="btn" onclick="generateScenes()">Next: Generate Scene Prompts</button>
+            </div>
+        </div>
+
+        <!-- SECTION 2: SCENES -->
+        <div class="card hidden" id="section-scenes">
+            <h2>2. Review Scene Prompts</h2>
+            <p>The AI has analyzed your script and created the following image prompts.</p>
+
+            <div id="scene-list-container" class="scene-list">
+                <!-- Scenes inserted here -->
+            </div>
+
+            <div style="text-align: right; margin-top: 20px;">
+                <button class="btn" onclick="generateImages()">Next: Generate Images</button>
+            </div>
+        </div>
+
+        <!-- SECTION 3: IMAGES -->
+        <div class="card hidden" id="section-images">
+            <h2>3. Generated Images</h2>
+            <div id="image-gallery" class="gallery">
+                <!-- Images inserted here -->
+            </div>
+
+            <div style="text-align: right; margin-top: 20px;">
+                <button class="btn" onclick="generateAudio()">Next: Generate Narration</button>
+            </div>
+        </div>
+
+        <!-- SECTION 4: AUDIO -->
+        <div class="card hidden" id="section-audio">
+            <h2>4. Narration Audio</h2>
+            <div class="media-preview" id="audio-preview-container">
+                <p>Generating audio...</p>
+            </div>
+
+            <div style="text-align: right; margin-top: 20px;">
+                <button class="btn" onclick="createVideo()">Next: Create Video</button>
+            </div>
+        </div>
+
+        <!-- SECTION 5: VIDEO -->
+        <div class="card hidden" id="section-video">
+            <h2>5. Final Teaching Video</h2>
+            <div class="media-preview" id="video-preview-container">
+                <p>Waiting for video generation...</p>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="/" class="btn btn-secondary">Start New Project</a>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // State
+        let scenesData = [];
+
+        function updateStatus(msg, isError = false) {
+            const el = document.getElementById('status-bar');
+            el.textContent = msg;
+            el.style.display = 'block';
+            el.style.backgroundColor = isError ? '#fce8e6' : '#e8f4fc';
+            el.style.borderColor = isError ? '#e74c3c' : '#4a90e2';
+        }
+
+        function setActiveStep(stepNum) {
+            // Visualize steps
+            document.querySelectorAll('.step').forEach((el, index) => {
+                if (index + 1 === stepNum) el.classList.add('active');
+                else if (index + 1 < stepNum) el.classList.add('active'); // keep previous active
+                else el.classList.remove('active');
+            });
+
+            // Show sections
+            ['script', 'scenes', 'images', 'audio', 'video'].forEach((sec, index) => {
+                const el = document.getElementById('section-' + sec);
+                if (index + 1 === stepNum) el.classList.remove('hidden');
+                // Don't necessarily hide previous ones if we want a scrolling feel, 
+                // but for wizard feel we hide them. Let's hide them for clarity.
+                else el.classList.add('hidden');
+            });
+        }
+
+        async function generateScript() {
+            const topic = document.getElementById('topic').value;
+            if (!topic) return alert("Please enter a topic.");
+
+            // Collect Profile Data
+            const profile = {
+                knowledge_level: document.getElementById('knowledge_level').value,
+                english_level: document.getElementById('english_level').value,
+                examples_needed: document.getElementById('examples_needed').value,
+                confidence_level: document.getElementById('confidence_level').value,
+                learning_speed: "normal" // default or add UI if needed
+            };
+
+            updateStatus("Generating personalized script via Groq...");
+
+            try {
+                const res = await fetch('/api/topic-to-script', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic, profile })
+                });
+                const data = await res.json();
+
+                if (data.error) throw new Error(data.error);
+
+                document.getElementById('script-content').value = data.script;
+                updateStatus("Script generated successfully!");
+            } catch (e) {
+                updateStatus("Error: " + e.message, true);
+            }
+        }
+
+        async function generateScenes() {
+            const script = document.getElementById('script-content').value;
+            if (!script) return alert("Please enter a script.");
+
+            updateStatus("Analyzing script and generating scene prompts...");
+
+            try {
+                const res = await fetch('/api/generate-prompts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ script })
+                });
+                const data = await res.json();
+
+                if (data.error) throw new Error(data.error);
+
+                scenesData = data.scenes;
+                renderScenes(scenesData);
+                setActiveStep(2);
+                updateStatus("Scenes generated!");
+            } catch (e) {
+                updateStatus("Error: " + e.message, true);
+            }
+        }
+
+        function renderScenes(scenes) {
+            const container = document.getElementById('scene-list-container');
+            container.innerHTML = scenes.map(s => `
+                <div class="scene-item">
+                    <div style="margin-bottom: 8px;">
+                        <strong>Scene ${s.scene_number}</strong>: 
+                        <span style="font-size: 1.1em; color: #2c3e50;">${s.concept}</span>
+                        <span class="badge" style="background: #e1f5fe; color: #0288d1; padding: 2px 8px; border-radius: 4px; font-size: 0.85em; margin-left: 10px;">${s.diagram_type}</span>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 10px; font-size: 0.9em; background: #f8f9fa; padding: 8px; border-radius: 6px;">
+                        <div>
+                            <strong>Visual Elements:</strong>
+                            <ul style="margin: 5px 0; padding-left: 20px;">
+                                ${Array.isArray(s.visual_elements) ? s.visual_elements.map(i => `<li>${i}</li>`).join('') : '<li>' + s.visual_elements + '</li>'}
+                            </ul>
+                        </div>
+                        <div>
+                            <strong>Relationships:</strong>
+                            <ul style="margin: 5px 0; padding-left: 20px;">
+                                ${Array.isArray(s.relationships) ? s.relationships.map(r => `<li>${r}</li>`).join('') : '<li>' + s.relationships + '</li>'}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div style="background: #fff3e0; padding: 10px; border-left: 3px solid #ff9800; font-size: 0.9em;">
+                        <strong>Image Prompt:</strong><br>
+                        ${s.image_prompt}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function generateImages() {
+            updateStatus("Generating images with NVIDIA...");
+            setActiveStep(3); // Move to UI immediately
+
+            const gallery = document.getElementById('image-gallery');
+            gallery.innerHTML = '<p>Generating images...</p>';
+
+            try {
+                const res = await fetch('/api/generate-images', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ scenes: scenesData })
+                });
+                const data = await res.json();
+
+                if (data.error) throw new Error(data.error);
+
+                gallery.innerHTML = data.images.map(img => `
+                    <div class="gallery-item">
+                        <img src="${img.url}" alt="Scene Image">
+                        <p style="text-align:center; margin:5px 0;">Scene ${img.scene_number}</p>
+                    </div>
+                `).join('');
+
+                updateStatus("Images generated successfully!");
+            } catch (e) {
+                updateStatus("Error: " + e.message, true);
+                gallery.innerHTML = '<p style="color:red">Failed to generate images.</p>';
+            }
+        }
+
+        async function generateAudio() {
+            const script = document.getElementById('script-content').value;
+            updateStatus("Generating audio narration...");
+            setActiveStep(4);
+
+            try {
+                const res = await fetch('/api/generate-audio', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ script })
+                });
+                const data = await res.json();
+
+                if (data.error) throw new Error(data.error);
+
+                const container = document.getElementById('audio-preview-container');
+                container.innerHTML = `
+                    <audio controls style="width: 100%;">
+                        <source src="${data.audio_url}" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                    <p><a href="${data.audio_url}" download>Download Audio</a></p>
+                `;
+
+                updateStatus("Audio generated!");
+            } catch (e) {
+                updateStatus("Error: " + e.message, true);
+            }
+        }
+
+        async function createVideo() {
+            updateStatus("Rendering final video using MoviePy...");
+            setActiveStep(5);
+
+            try {
+                const res = await fetch('/api/create-video', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        scene_count: scenesData.length
+                    })
+                });
+                const data = await res.json();
+
+                if (data.error) throw new Error(data.error);
+
+                const container = document.getElementById('video-preview-container');
+                container.innerHTML = `
+                    <video controls autoplay>
+                        <source src="${data.video_url}" type="video/mp4">
+                        Your browser does not support the video element.
+                    </video>
+                    <p style="margin-top:15px;">
+                        <a href="${data.video_url}" download class="btn">Download Video</a>
+                    </p>
+                `;
+
+                updateStatus("Video created successfully! 🎬");
+            } catch (e) {
+                updateStatus("Error: " + e.message, true);
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Teaching Video Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <a href="/" class="logo">🎓 AI Teacher</a>
+            <nav>
+                <a href="/" class="btn btn-secondary">Home</a>
+                <a href="/generator" class="btn">Start Creating</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card" style="text-align: center; padding: 60px 40px;">
+            <h1>Transform Teaching Scripts into Educational Videos</h1>
+            <p style="font-size: 1.2rem; max-width: 600px; margin: 20px auto;">
+                Create engaging, scene-based educational videos automatically using the power of AI.
+                From script to video in minutes.
+            </p>
+            <div style="margin-top: 40px; display: flex; gap: 20px; justify-content: center;">
+                <a href="/generator" class="btn" style="padding: 15px 30px; font-size: 1.2rem;">Try Generator Now</a>
+                <a href="/quiz" class="btn btn-secondary" style="padding: 15px 30px; font-size: 1.2rem;">Take Physics
+                    Quiz</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>How It Works</h2>
+            <div style="display: flex; gap: 20px; text-align: center; margin-top: 30px;">
+                <div style="flex: 1;">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">📝</div>
+                    <h3>1. Input Script</h3>
+                    <p>Enter a topic or paste your own script.</p>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">🎨</div>
+                    <h3>2. Generate Visuals</h3>
+                    <p>AI creates scene prompts and images.</p>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">🎙️</div>
+                    <h3>3. Add Voice</h3>
+                    <p>Generate clear audio narration.</p>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">🎬</div>
+                    <h3>4. Export Video</h3>
+                    <p>Download your final teaching video.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

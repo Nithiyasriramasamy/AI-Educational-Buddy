@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.env
+.venv
+env/
+venv/
+static/images/*
+static/audio/*
+static/video/*
+!static/images/.gitkeep
+!static/audio/.gitkeep
+!static/video/.gitkeep
+uploads/*
+.vscode/
+test_output/
